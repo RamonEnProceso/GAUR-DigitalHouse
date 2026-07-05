@@ -1,0 +1,32 @@
+services:
+  gaur-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gaur-api
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - PORT=3000
+    expose:
+      - "3000"
+    restart: unless-stopped
+    networks:
+      - gaur-network
+
+  gaur-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: gaur-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - gaur-api
+    restart: unless-stopped
+    networks:
+      - gaur-network
+
+networks:
+  gaur-network:
+    driver: bridge

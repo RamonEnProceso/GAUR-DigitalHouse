@@ -1,5 +1,15 @@
-backend/node_modules
-backend/dist
-backend/.env
+# Dependencias
+node_modules/
 
-*.js
+# Build outputs
+dist/
+backend/dist/
+frontend/dist/
+backend/index.js
+
+# Variables de entorno
+.env
+
+# OS
+.DS_Store
+Thumbs.db

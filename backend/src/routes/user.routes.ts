@@ -1,12 +1,9 @@
 import { Router } from 'express';
-import { create, getAll, getById, remove, update } from '../controllers/user.controller.js';
+import { getProfile, updateProfile } from '../controllers/user.controller.js';
 
 const router = Router();
 
-router.get('/', getAll);
-router.get('/:id', getById);
-router.post('/', create);
-router.put('/:id', update);
-router.delete('/:id', remove);
+router.get('/', getProfile);
+router.put('/', updateProfile);
 
 export default router;

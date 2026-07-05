@@ -1,53 +1,36 @@
 import { Request, Response } from 'express';
-import UserModel, { UserCreatePayload, UserUpdatePayload } from '../models/user.model.js';
+import userModel from '../models/user.model.js';
 
-const userModel = new UserModel();
-const HARD_CODED_USER_ID = 'user-123';
+function getUserId(req: Request): string {
+  return (req as any).userId || '00000000-0000-0000-0000-000000000001';
+}
 
-export const getAll = async (_req: Request, res: Response): Promise<void> => {
-  const users = await userModel.getAllByUserId(HARD_CODED_USER_ID);
-  res.status(200).json(users);
-};
-
-export const getById = async (req: Request, res: Response): Promise<void> => {
-  const { id } = req.params;
-  const user = await userModel.getById(HARD_CODED_USER_ID, id);
-
-  if (!user) {
-    res.status(404).json({ message: 'Usuario no encontrado' });
-    return;
+export const getProfile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = getUserId(req);
+    let user = await userModel.getById(userId);
+    if (!user) {
+      // Auto-crear si no existe (primer ingreso después de auth)
+      user = await userModel.upsert(userId, { nombre: 'Usuario' });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener perfil', error });
   }
-
-  res.status(200).json(user);
 };
 
-export const create = async (req: Request, res: Response): Promise<void> => {
-  const payload = req.body as UserCreatePayload;
-  const newUser = await userModel.create(HARD_CODED_USER_ID, payload);
-  res.status(201).json(newUser);
-};
-
-export const update = async (req: Request, res: Response): Promise<void> => {
-  const { id } = req.params;
-  const payload = req.body as UserUpdatePayload;
-
-  const updatedUser = await userModel.update(HARD_CODED_USER_ID, id, payload);
-  if (!updatedUser) {
-    res.status(404).json({ message: 'Usuario no encontrado para actualizar' });
-    return;
+export const updateProfile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = getUserId(req);
+    const payload = req.body;
+    let updatedUser = await userModel.update(userId, payload);
+    if (!updatedUser) {
+      // Si no existe, crearlo automáticamente con los datos recibidos
+      updatedUser = await userModel.upsert(userId, payload);
+    }
+    res.status(200).json(updatedUser);
+  } catch (error: any) {
+    console.error('❌ Error al actualizar perfil:', error?.message || error);
+    res.status(500).json({ message: `Error al actualizar perfil: ${error?.message || String(error)}`, error: error?.message || String(error) });
   }
-
-  res.status(200).json(updatedUser);
-};
-
-export const remove = async (req: Request, res: Response): Promise<void> => {
-  const { id } = req.params;
-  const deleted = await userModel.remove(HARD_CODED_USER_ID, id);
-
-  if (!deleted) {
-    res.status(404).json({ message: 'Usuario no encontrado para eliminar' });
-    return;
-  }
-
-  res.status(204).send();
 };
