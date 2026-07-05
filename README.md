@@ -141,7 +141,7 @@ npm run dev          # http://localhost:5173 (con proxy a backend)
 
 ## 📸 Captura de Pantalla
 
-*(Agregar captura de pantalla de la app funcionando)*
+<img width="525" height="1010" alt="image" src="https://github.com/user-attachments/assets/ffc9d37e-702d-433d-9297-1fa73f29bdb2" />
 
 ---
 
