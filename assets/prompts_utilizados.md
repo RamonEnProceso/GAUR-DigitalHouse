@@ -19,5 +19,6 @@
 
 ---
 
-## Frontend
+## Prompt Open Claude
 
+> "En base a los Briefs de la carpata `assets/DigitalHouse - Briefs IA.md`, termines de generar la aplicación."
