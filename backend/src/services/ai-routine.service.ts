@@ -203,12 +203,47 @@ Responde SOLO con JSON válido en este formato exacto, sin texto adicional:
 }`;
 }
 
+/** Modelos por defecto según el proveedor */
+const PROVIDER_DEFAULT_MODELS: Record<string, string> = {
+  openai: 'gpt-4o-mini',
+  deepseek: 'deepseek-chat',
+  anthropic: 'claude-3-haiku-20240307',
+  gemini: 'gemini-2.0-flash-exp',
+};
+
+/**
+ * Devuelve el modelo efectivo a usar para un proveedor.
+ * Si el modelo guardado no es coherente con el proveedor, usa el default.
+ */
+function getEffectiveModel(provider: string, savedModel: string | undefined | null): string {
+  const defaultModel = PROVIDER_DEFAULT_MODELS[provider] || 'gpt-4o-mini';
+  if (!savedModel) return defaultModel;
+
+  // Sanity check: el modelo debe coincidir con el proveedor
+  const providerPrefixes: Record<string, string[]> = {
+    openai: ['gpt-', 'o', 'ft:gpt-'],
+    deepseek: ['deepseek'],
+    anthropic: ['claude'],
+    gemini: ['gemini'],
+  };
+
+  const validPrefixes = providerPrefixes[provider];
+  if (validPrefixes && !validPrefixes.some((prefix) => savedModel.startsWith(prefix))) {
+    // El modelo guardado no corresponde al proveedor — usar default
+    return defaultModel;
+  }
+
+  return savedModel;
+}
+
 async function callAiProvider(
   provider: string,
   apiKey: string,
   model: string,
   prompt: string
 ): Promise<string> {
+  const effectiveModel = getEffectiveModel(provider, model);
+
   const url = provider === 'openai'
     ? 'https://api.openai.com/v1/chat/completions'
     : provider === 'deepseek'
@@ -216,7 +251,7 @@ async function callAiProvider(
     : provider === 'anthropic'
     ? 'https://api.anthropic.com/v1/messages'
     : provider === 'gemini'
-    ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
+    ? `https://generativelanguage.googleapis.com/v1beta/models/${effectiveModel}:generateContent?key=${apiKey}`
     : `https://api.openai.com/v1/chat/completions`; // fallback a OpenAI
 
   if (provider === 'openai' || provider === 'deepseek') {
@@ -227,7 +262,7 @@ async function callAiProvider(
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: model || (provider === 'deepseek' ? 'deepseek-chat' : 'gpt-4o-mini'),
+        model: effectiveModel,
         messages: [
           { role: 'system', content: 'Eres un entrenador personal experto. Genera rutinas de ejercicio en JSON.' },
           { role: 'user', content: prompt },
@@ -254,7 +289,7 @@ async function callAiProvider(
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: model || 'claude-3-haiku-20240307',
+        model: effectiveModel,
         max_tokens: 4096,
         messages: [{ role: 'user', content: prompt }],
       }),

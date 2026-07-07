@@ -11,8 +11,16 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [apiKey, setApiKey] = useState('');
+
+  // Modelos por defecto según el proveedor seleccionado
+  const PROVIDER_DEFAULT_MODELS: Record<string, string> = {
+    openai: 'gpt-4o-mini',
+    deepseek: 'deepseek-chat',
+    anthropic: 'claude-3-haiku-20240307',
+    gemini: 'gemini-2.0-flash-exp',
+  };
   const [provider, setProvider] = useState('openai');
-  const [model, setModel] = useState('gpt-4o-mini');
+  const [model, setModel] = useState(PROVIDER_DEFAULT_MODELS['openai']);
   const [aiSectionOpen, setAiSectionOpen] = useState(false);
 
   // Formulario perfil
@@ -242,7 +250,12 @@ export default function Profile() {
                 <label className="block text-sm text-gray-400 mb-1">Proveedor</label>
                 <select
                   value={provider}
-                  onChange={(e) => setProvider(e.target.value)}
+                  onChange={(e) => {
+                    const newProvider = e.target.value;
+                    setProvider(newProvider);
+                    // Auto-asignar el modelo por defecto del proveedor seleccionado
+                    setModel(PROVIDER_DEFAULT_MODELS[newProvider] || 'gpt-4o-mini');
+                  }}
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
                 >
                   <option value="openai">OpenAI</option>

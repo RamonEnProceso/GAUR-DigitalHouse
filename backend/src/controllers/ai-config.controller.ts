@@ -5,6 +5,14 @@ function getUserId(req: Request): string {
   return (req as any).userId || '00000000-0000-0000-0000-000000000001';
 }
 
+/** Modelos por defecto según el proveedor */
+const PROVIDER_DEFAULT_MODELS: Record<string, string> = {
+  openai: 'gpt-4o-mini',
+  deepseek: 'deepseek-chat',
+  anthropic: 'claude-3-haiku-20240307',
+  gemini: 'gemini-2.0-flash-exp',
+};
+
 export const getConfig = async (req: Request, res: Response): Promise<void> => {
   try {
     const config = await aiConfigModel.getPublic(getUserId(req));
@@ -29,10 +37,14 @@ export const saveConfig = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
+    // Usar el modelo por defecto del proveedor si no se especificó uno
+    const selectedProvider = (provider || 'openai').toLowerCase();
+    const defaultModel = PROVIDER_DEFAULT_MODELS[selectedProvider] || 'gpt-4o-mini';
+
     const config = await aiConfigModel.upsert(getUserId(req), {
-      provider: provider || 'openai',
+      provider: selectedProvider,
       api_key,
-      model: model || 'gpt-4o-mini',
+      model: model || defaultModel,
     });
 
     res.status(200).json({
